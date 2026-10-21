@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#030814">
+<title>Aura · Student Wellbeing Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,300;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: dark;
+    --space: #030814;
+    --card: rgba(7, 15, 34, 0.70);
+    --card-line: rgba(150, 175, 255, 0.17);
+    --text: #F2F6FC;
+    --muted: #93A3BD;
+    --dim: #5F6F88;
+    --mint: #2DE8C0;
+    --lavender: #C3A6FF;
+    --blue: #4C93FF;
+    --cyan: #5FE3F0;
+    --track: #323C49;
+    --font: 'Figtree', 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--space); }
+  body {
+    margin: 0; min-height: 100vh; color: var(--text); font-family: var(--font); font-size: 1rem; line-height: 1.5;
+    background: linear-gradient(180deg, #02050E 0%, #040B1E 55%, #060A1C 100%);
+  }
+  [hidden] { display: none !important; }
+  .icon { width: 1.25em; height: 1.25em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  /* ---------- Galaxy background ---------- */
+  .space { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .nebula {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(900px 600px at 12% 18%, rgba(110, 70, 255, 0.30), transparent 70%),
+      radial-gradient(800px 560px at 88% 82%, rgba(30, 200, 215, 0.17), transparent 70%),
+      radial-gradient(700px 480px at 58% 6%, rgba(210, 80, 220, 0.12), transparent 70%),
+      radial-gradient(800px 520px at 24% 100%, rgba(40, 100, 255, 0.18), transparent 70%);
+  }
+  .galaxy {
+    position: absolute; right: -240px; top: -110px; width: 1100px; height: 420px; border-radius: 50%;
+    transform: rotate(-24deg);
+    background: radial-gradient(ellipse at center, rgba(255, 244, 255, 0.60) 0%, rgba(170, 140, 255, 0.34) 14%, rgba(70, 130, 255, 0.18) 38%, transparent 70%);
+    filter: blur(5px); opacity: 0.85;
+    animation: drift 420s linear infinite;
+  }
+  .galaxy::after {
+    content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 0 8%, rgba(150, 170, 255, 0.40) 17%, transparent 30%, transparent 48%, rgba(255, 150, 220, 0.30) 66%, transparent 80%);
+    -webkit-mask-image: radial-gradient(closest-side, #000 15%, transparent 100%);
+            mask-image: radial-gradient(closest-side, #000 15%, transparent 100%);
+    filter: blur(10px);
+  }
+  @keyframes drift { from { transform: rotate(-24deg); } to { transform: rotate(336deg); } }
+  #sky { position: absolute; inset: 0; }
+
+  /* ---------- Page ---------- */
+  .wrap { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 1.5rem 2rem 3rem; }
+  .bar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .brand { display: flex; align-items: center; gap: 0.75rem; font-size: 1.35rem; font-weight: 700; letter-spacing: 0.01em; }
+  .brand .mark {
+    width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: var(--cyan);
+    background: rgba(95, 227, 240, 0.08); border: 1.5px solid rgba(95, 227, 240, 0.5); box-shadow: 0 0 22px rgba(95, 227, 240, 0.25);
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.3rem 0.9rem;
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #E3EAFF;
+    border: 1px solid rgba(255,255,255,0.22); border-radius: 999px; background: rgba(255,255,255,0.06);
+  }
+  .pill .icon { color: var(--cyan); width: 1.1em; height: 1.1em; }
+
+  .intro { padding: 2.6rem 0 2rem; max-width: 52rem; }
+  h1 { margin: 1.1rem 0 0.9rem; font-size: clamp(2.4rem, 4.6vw, 4rem); line-height: 1.06; font-weight: 700; letter-spacing: -0.02em; }
+  h1 em { font-style: italic; font-weight: 300; color: #9FEFF7; }
+  .intro p { margin: 0; max-width: 38rem; font-size: 1.1rem; color: #B9C6E3; }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 1.75rem; align-items: start; }
+  @media (max-width: 1020px) { .grid { grid-template-columns: 1fr; } .wrap { padding: 1.25rem 1.1rem 3rem; } }
+  form { display: grid; gap: 1.5rem; }
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 760px) { .duo { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card); border: 1px solid var(--card-line); border-radius: 26px; padding: 1.5rem;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 18px 50px rgba(0, 0, 10, 0.35);
+  }
+  .card-head { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1.25rem; }
+  .card-head .chip { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; color: var(--cyan); background: rgba(95,227,240,0.10); border: 1px solid rgba(95,227,240,0.3); }
+  .card h2 { margin: 0; font-size: 1.2rem; font-weight: 600; }
+  .card-head .date { margin-left: auto; font-weight: 600; color: var(--muted); font-size: 0.95rem; }
+  .fields { display: grid; gap: 1.3rem; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
+
+  label, .label { display: flex; align-items: center; gap: 0.45rem; font-weight: 600; margin-bottom: 0.45rem; }
+  label .icon, .label .icon { color: var(--cyan); }
+  .hint { display: block; font-size: 0.85rem; color: var(--muted); margin: -0.25rem 0 0.45rem; }
+  input[type=number], input[type=text], select {
+    width: 100%; min-height: 50px; font: inherit; font-weight: 500; color: var(--text);
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.13);
+    border-radius: 14px; padding: 0.6rem 0.9rem; transition: border-color 150ms, box-shadow 150ms;
+  }
+  select option { background: #0B1626; color: #fff; }
+  input:hover, select:hover { border-color: rgba(255,255,255,0.3); }
+  input[type=number]:focus, input[type=text]:focus, select:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(95,227,240,0.22); }
+  :focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+  input[type=number]:focus-visible, input[type=text]:focus-visible, select:focus-visible { outline: none; }
+
+  .seg { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg label {
+    margin: 0; min-height: 46px; padding: 0.4rem 1.05rem; cursor: pointer; font-weight: 500;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.13); border-radius: 999px;
+    transition: background 150ms, border-color 150ms, color 150ms, box-shadow 150ms;
+  }
+  .seg label:hover { border-color: rgba(255,255,255,0.32); }
+  .seg input:checked + label { background: rgba(45,232,192,0.14); border-color: var(--mint); color: var(--mint); font-weight: 600; box-shadow: 0 0 16px rgba(45,232,192,0.35); }
+  .seg input:focus-visible + label { outline: 3px solid var(--cyan); outline-offset: 3px; }
+
+  /* Glow stat bars */
+  .meters { display: grid; grid-template-columns: 1fr 1fr; gap: 1.7rem 2.2rem; margin-bottom: 1.6rem; }
+  @media (max-width: 760px) { .meters { grid-template-columns: 1fr; } }
+  .meter-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; }
+  .meter-head label { margin: 0; color: var(--c); font-size: 1.35rem; font-weight: 500; text-shadow: 0 0 18px var(--cg); }
+  .meter-head output { color: var(--c); font-size: 1rem; text-shadow: 0 0 14px var(--cg); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  input[type=range] {
+    -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 40px; margin: 0.6rem 0 0.35rem;
+    border-radius: 999px; cursor: pointer;
+    background: linear-gradient(var(--c), var(--c)) 0 0 / calc(34px + (100% - 28px) * var(--p, 0.5)) 100% no-repeat, var(--track);
+    box-shadow: 0 0 26px -9px var(--c);
+  }
+  input[type=range]::-webkit-slider-runnable-track { height: 40px; background: transparent; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 28px; height: 28px; margin-top: 6px; border-radius: 50%; background: rgba(255,255,255,0.93); border: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+  input[type=range]::-moz-range-track { height: 40px; background: transparent; }
+  input[type=range]::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%; border: 0; background: rgba(255,255,255,0.93); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+  .levels { display: grid; grid-template-columns: 1fr 1fr 1fr; font-size: 0.92rem; color: #55637A; }
+  .levels span:nth-child(2) { text-align: center; }
+  .levels span:nth-child(3) { text-align: right; }
+  .levels .on { color: #fff; font-weight: 500; }
+
+  /* Result card */
+  .result { --glow: rgba(45, 200, 200, 0.22); position: sticky; top: 1.25rem; overflow: hidden; text-align: center; padding: 1.5rem 1.4rem 1.5rem; }
+  .result::before {
+    content: ""; position: absolute; left: 50%; top: 38%; width: 520px; height: 520px; transform: translate(-50%, -50%);
+    border-radius: 50%; pointer-events: none; background: radial-gradient(circle, var(--glow) 0%, transparent 66%); transition: background 800ms;
+  }
+  .result > * { position: relative; }
+  .gauge { width: 100%; max-width: 380px; display: block; margin: 0 auto 0.2rem; overflow: visible; }
+  .zone { transition: opacity 500ms, filter 500ms; opacity: 0.3; }
+  .zone.on { opacity: 1; filter: drop-shadow(0 0 10px rgba(95,227,240,0.65)); }
+  .zone-label { fill: #8FA0BC; font: 600 11.5px var(--font); text-anchor: middle; dominant-baseline: middle; transition: fill 400ms; }
+  .zone-label.on { fill: #fff; }
+  .end-label { fill: var(--dim); font: 500 11px var(--font); text-anchor: middle; }
+  .needle { transform-origin: 180px 170px; transform: rotate(-90deg); transition: transform 1.3s cubic-bezier(.34,1.35,.64,1); filter: drop-shadow(0 0 6px rgba(255,255,255,0.7)); }
+  .caps { margin: 0.4rem 0 0; font-size: 0.74rem; font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: var(--cyan); }
+  .aura { margin: 0.2rem 0 0; font-size: 4.6rem; line-height: 1.05; font-style: italic; font-weight: 300; letter-spacing: -0.02em; text-shadow: 0 0 44px var(--glow); }
+  .aura.idle { color: var(--dim); text-shadow: none; font-size: 2.8rem; }
+  .sub { margin: 0.3rem 0 0; color: #B9C6E3; min-height: 3em; }
+  .score-card { display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 1.2rem; margin: 0.8rem 0 1rem; border: 1px solid var(--card-line); background: rgba(255,255,255,0.05); border-radius: 18px; }
+  .score-card span { color: var(--muted); }
+  .score-card b { font-size: 1.9rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .score-card small { color: var(--muted); font-size: 1rem; font-weight: 500; }
+  .error { text-align: left; margin: 0.8rem 0; padding: 0.8rem 1rem; background: rgba(255,107,107,0.14); border: 1px solid #FF6B6B; border-radius: 14px; font-size: 0.93rem; }
+  .error code { display: block; margin-top: 0.35rem; font-size: 0.84rem; overflow-wrap: anywhere; color: #FFC9C9; }
+
+  .journey {
+    width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem; text-align: left;
+    padding: 0.9rem 0.9rem 0.9rem 1.4rem; min-height: 76px; font: inherit; color: var(--text); cursor: pointer;
+    background: linear-gradient(135deg, rgba(95,227,240,0.15), rgba(255,255,255,0.04));
+    border: 1px solid rgba(95,227,240,0.45); border-radius: 22px;
+    box-shadow: 0 0 28px rgba(95,227,240,0.16); transition: box-shadow 200ms, transform 150ms, border-color 200ms;
+  }
+  .journey:hover { box-shadow: 0 0 44px rgba(95,227,240,0.36); border-color: var(--cyan); transform: translateY(-1px); }
+  .journey:active { transform: translateY(1px); }
+  .journey[disabled] { cursor: progress; transform: none; }
+  .journey strong { display: block; font-size: 1.1rem; }
+  .journey small { color: var(--muted); font-size: 0.85rem; }
+  .go { width: 52px; height: 52px; border-radius: 50%; flex: none; display: grid; place-items: center; background: var(--cyan); color: #04202A; box-shadow: 0 0 22px rgba(95,227,240,0.6); }
+  .go .icon { width: 1.5em; height: 1.5em; stroke-width: 2.5; }
+  .spinner { width: 1.4rem; height: 1.4rem; border-radius: 50%; border: 3px solid rgba(4,32,42,0.3); border-top-color: #04202A; animation: spin 700ms linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .note { margin: 1rem 0 0; font-size: 0.83rem; color: var(--muted); text-align: left; }
+  footer { margin-top: 2.5rem; text-align: center; font-size: 0.85rem; color: var(--dim); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .galaxy { animation: none; }
+    .needle, .zone, .journey, .result::before { transition: none; }
+    .spinner { animation-duration: 2.5s; }
+  }
+</style>
+</head>
+<body>
+
+<div class="space" aria-hidden="true">
+  <div class="nebula"></div>
+  <div class="galaxy"></div>
+  <canvas id="sky"></canvas>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18h2"/></symbol>
+  <symbol id="i-unlock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></symbol>
+  <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16v4M17 18h4"/></symbol>
+  <symbol id="i-cap" viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-4.5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+</svg>
+
+<div class="wrap">
+  <header class="bar">
+    <div class="brand"><span class="mark"><svg class="icon"><use href="#i-sparkle"/></svg></span>Aura</div>
+    <span class="pill"><svg class="icon"><use href="#i-sparkle"/></svg>Random Forest · 5,000 students</span>
+  </header>
+
+  <section class="intro">
+    <span class="pill"><svg class="icon"><use href="#i-sparkle"/></svg>Student wellbeing predictor</span>
+    <h1>How is a student's day shaping their <em>mind?</em></h1>
+    <p>Describe a day of sleep, study, stress and screen time. The model reads it and shows the aura it expects, along with a predicted mental health score.</p>
+  </section>
+
+  <div class="grid">
+    <form id="form" novalidate>
+      <div class="duo">
+        <section class="card" aria-labelledby="h-about">
+          <div class="card-head"><span class="chip"><svg class="icon"><use href="#i-user"/></svg></span><h2 id="h-about">About the student</h2></div>
+          <div class="fields">
+            <div class="row">
+              <div>
+                <label for="Age"><svg class="icon"><use href="#i-user"/></svg>Age</label>
+                <input type="number" id="Age" name="Age" min="10" max="100" value="20" required>
+              </div>
+              <div>
+                <label for="Country"><svg class="icon"><use href="#i-globe"/></svg>Country</label>
+                <input type="text" id="Country" name="Country" list="countries" value="India" autocomplete="off" required>
+                <datalist id="countries">
+                  <option>India</option><option>USA</option><option>Canada</option><option>Australia</option>
+                  <option>UK</option><option>Germany</option><option>Mexico</option><option>Turkey</option>
+                  <option>France</option><option>Brazil</option><option>Japan</option><option>South Korea</option>
+                  <option>China</option><option>Pakistan</option><option>Nigeria</option><option>Italy</option>
+                  <option>Spain</option><option>Russia</option><option>Other</option>
+                </datalist>
+              </div>
+            </div>
+            <div>
+              <span class="label" id="lbl-gender"><svg class="icon"><use href="#i-user"/></svg>Gender</span>
+              <div class="seg" role="radiogroup" aria-labelledby="lbl-gender">
+                <input type="radio" name="Gender" id="g1" value="Female" checked><label for="g1">Female</label>
+                <input type="radio" name="Gender" id="g2" value="Male"><label for="g2">Male</label>
+              </div>
+            </div>
+            <div>
+              <span class="label" id="lbl-level"><svg class="icon"><use href="#i-cap"/></svg>Education level</span>
+              <div class="seg" role="radiogroup" aria-labelledby="lbl-level">
+                <input type="radio" name="Academic_Level" id="a1" value="High School"><label for="a1">High school</label>
+                <input type="radio" name="Academic_Level" id="a2" value="Undergraduate" checked><label for="a2">Undergraduate</label>
+                <input type="radio" name="Academic_Level" id="a3" value="Graduate"><label for="a3">Graduate</label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="h-social">
+          <div class="card-head"><span class="chip"><svg class="icon"><use href="#i-phone"/></svg></span><h2 id="h-social">Social media</h2></div>
+          <div class="fields">
+            <div>
+              <label for="Most_Used_Platform"><svg class="icon"><use href="#i-chat"/></svg>Most used platform</label>
+              <select id="Most_Used_Platform" name="Most_Used_Platform">
+                <option>Instagram</option><option>TikTok</option><option>Facebook</option>
+                <option>YouTube</option><option>Twitter</option><option>Snapchat</option>
+                <option>WhatsApp</option><option>LinkedIn</option><option>LINE</option>
+                <option>KakaoTalk</option><option>VKontakte</option><option>WeChat</option>
+              </select>
+            </div>
+            <div>
+              <label for="Purpose_Of_Use"><svg class="icon"><use href="#i-sparkle"/></svg>Main reason for using it</label>
+              <select id="Purpose_Of_Use" name="Purpose_Of_Use">
+                <option>Entertainment</option><option>Networking</option>
+                <option>Education</option><option>News</option>
+              </select>
+            </div>
+            <div>
+              <label for="Daily_Unlocks"><svg class="icon"><use href="#i-unlock"/></svg>Phone unlocks per day</label>
+              <span class="hint">Most students in the data unlock between 60 and 270 times.</span>
+              <input type="number" id="Daily_Unlocks" name="Daily_Unlocks" min="0" value="150" required>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="card" aria-labelledby="h-stats">
+        <div class="card-head"><span class="chip"><svg class="icon"><use href="#i-pulse"/></svg></span><h2 id="h-stats">Daily Stats</h2><span class="date" id="today"></span></div>
+        <div class="meters">
+          <div class="meter" style="--c:#5FE3F0;--cg:rgba(95,227,240,0.45)">
+            <div class="meter-head"><label for="Avg_Daily_Usage_Hours">Screen time</label><output for="Avg_Daily_Usage_Hours"></output></div>
+            <input type="range" id="Avg_Daily_Usage_Hours" name="Avg_Daily_Usage_Hours" min="0" max="12" step="0.1" value="5">
+            <div class="levels"><span>Low</span><span>Moderate</span><span>High</span></div>
+          </div>
+          <div class="meter" style="--c:#C3A6FF;--cg:rgba(195,166,255,0.45)">
+            <div class="meter-head"><label for="Sleep_Hours_Per_Night">Sleep</label><output for="Sleep_Hours_Per_Night"></output></div>
+            <input type="range" id="Sleep_Hours_Per_Night" name="Sleep_Hours_Per_Night" min="0" max="12" step="0.1" value="7">
+            <div class="levels"><span>Low</span><span>Moderate</span><span>High</span></div>
+          </div>
+          <div class="meter" style="--c:#4C93FF;--cg:rgba(76,147,255,0.5)">
+            <div class="meter-head"><label for="Study_Hours">Study</label><output for="Study_Hours"></output></div>
+            <input type="range" id="Study_Hours" name="Study_Hours" min="0" max="12" step="0.1" value="3">
+            <div class="levels"><span>Low</span><span>Moderate</span><span>High</span></div>
+          </div>
+          <div class="meter" style="--c:#2DE8C0;--cg:rgba(45,232,192,0.45)">
+            <div class="meter-head"><label for="Physical_Activity_Hours">Physical</label><output for="Physical_Activity_Hours"></output></div>
+            <input type="range" id="Physical_Activity_Hours" name="Physical_Activity_Hours" min="0" max="6" step="0.1" value="1">
+            <div class="levels"><span>Low</span><span>Moderate</span><span>High</span></div>
+          </div>
+        </div>
+        <div>
+          <span class="label" id="lbl-stress"><svg class="icon"><use href="#i-pulse"/></svg>Stress level</span>
+          <div class="seg" role="radiogroup" aria-labelledby="lbl-stress">
+            <input type="radio" name="Stress_Level" id="s1" value="Low"><label for="s1">Low</label>
+            <input type="radio" name="Stress_Level" id="s2" value="Medium" checked><label for="s2">Medium</label>
+            <input type="radio" name="Stress_Level" id="s3" value="High"><label for="s3">High</label>
+            <input type="radio" name="Stress_Level" id="s4" value="Very High"><label for="s4">Very high</label>
+          </div>
+        </div>
+      </section>
+    </form>
+
+    <aside class="card result" id="result" aria-live="polite">
+      <svg class="gauge" viewBox="0 0 360 200" aria-hidden="true">
+        <g id="zones"></g>
+        <g id="zone-labels"></g>
+        <text class="end-label" x="75" y="190">3</text>
+        <text class="end-label" x="285" y="190">10</text>
+        <g class="needle" id="needle">
+          <polygon points="176,170 184,170 180,86" fill="#fff"/>
+          <circle cx="180" cy="170" r="11" fill="#fff"/>
+          <circle cx="180" cy="170" r="5" fill="#0A1A30"/>
+        </g>
+      </svg>
+      <p class="caps">Current aura</p>
+      <p class="aura idle" id="aura">Not read yet</p>
+      <p class="sub" id="sub">Fill in the student's day, then reveal the aura.</p>
+      <div class="score-card" id="score-card" hidden><span>Predicted score</span><div><b id="score">–</b> <small>/ 10</small></div></div>
+      <div class="error" id="error" role="alert" hidden></div>
+      <button type="button" class="journey" id="reveal">
+        <span><strong id="reveal-text">Reveal your aura</strong><small>Runs the model on your answers</small></span>
+        <span class="go"><svg class="icon" id="reveal-icon"><use href="#i-arrow"/></svg><span class="spinner" id="reveal-spin" hidden></span></span>
+      </button>
+      <p class="note">Scores in the training data ran from 3.6 to 9.4. This is a model estimate from survey data, not a diagnosis. If you are worried about your wellbeing, talk to a doctor or counsellor.</p>
+    </aside>
+  </div>
+
+  <footer>Portfolio project · scikit-learn · FastAPI</footer>
+</div>
+
+<script>
+  // Local testing uses your own PC. Any other address (GitHub Pages) uses the deployed API.
+  // After you deploy on Render, replace the address on the second line below.
+  const IS_LOCAL = location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(location.hostname);
+  const API_URL = IS_LOCAL ? 'http://127.0.0.1:8000' : 'https://YOUR-APP-NAME.onrender.com';
+
+  // The dial runs from 3 to 10, the range seen in the data, in four equal zones.
+  const SCALE_MIN = 3, SCALE_MAX = 10;
+  const ZONES = [
+    { name: 'Needs care', aura: 'Stormy',   colour: '#0E7C99', glow: 'rgba(130,110,255,0.32)' },
+    { name: 'Managing',   aura: 'Restless', colour: '#11B0D0', glow: 'rgba(76,147,255,0.32)' },
+    { name: 'Steady',     aura: 'Calm',     colour: '#3FD8EC', glow: 'rgba(45,232,192,0.30)' },
+    { name: 'Thriving',   aura: 'Radiant',  colour: '#86F5E4', glow: 'rgba(134,245,228,0.40)' }
+  ];
+
+  const form = document.getElementById('form');
+  const result = document.getElementById('result');
+  const needle = document.getElementById('needle');
+  const auraEl = document.getElementById('aura');
+  const subEl = document.getElementById('sub');
+  const scoreCard = document.getElementById('score-card');
+  const scoreEl = document.getElementById('score');
+  const errorEl = document.getElementById('error');
+  const reveal = document.getElementById('reveal');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const NS = 'http://www.w3.org/2000/svg';
+
+  document.getElementById('today').textContent =
+    new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+
+  /* ---------- Starfield ---------- */
+  (function starfield() {
+    const cv = document.getElementById('sky');
+    const ctx = cv.getContext('2d');
+    const COLOURS = ['255,255,255', '207,228,255', '191,243,255', '227,212,255', '255,233,210'];
+    let W = 0, H = 0, stars = [], shooter = null, nextShot = 4, last = performance.now();
+
+    function build() {
+      const count = Math.max(140, Math.min(460, Math.round((W * H) / 5000)));
+      stars = [];
+      for (let i = 0; i < count; i++) {
+        const roll = Math.random();
+        const depth = roll < 0.62 ? 0 : roll < 0.92 ? 1 : 2;
+        stars.push({
+          x: Math.random() * W, y: Math.random() * H,
+          r: [0.55, 0.95, 1.5][depth] * (0.75 + Math.random() * 0.5),
+          v: [1.5, 4, 8][depth],
+          tw: Math.random() * 6.283, ts: 0.6 + Math.random() * 1.8,
+          depth: depth, c: COLOURS[(Math.random() * COLOURS.length) | 0]
+        });
+      }
+    }
+    function resize() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = window.innerWidth; H = window.innerHeight;
+      cv.width = W * dpr; cv.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      build();
+      draw(0, 0);
+    }
+    function draw(t, dt) {
+      ctx.clearRect(0, 0, W, H);
+      for (let i = 0; i < stars.length; i++) {
+        const s = stars[i];
+        if (dt) {
+          s.y -= s.v * dt; s.x += s.v * 0.25 * dt;
+          if (s.y < -4) { s.y = H + 4; s.x = Math.random() * W; }
+          if (s.x > W + 4) s.x = -4;
+        }
+        const a = reduceMotion ? 0.8 : 0.55 + 0.45 * Math.sin(s.tw + t * s.ts);
+        if (s.depth === 2) {
+          ctx.fillStyle = 'rgba(' + s.c + ',' + (0.07 * a) + ')';
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 6, 0, 6.283); ctx.fill();
+          ctx.fillStyle = 'rgba(' + s.c + ',' + (0.14 * a) + ')';
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 3, 0, 6.283); ctx.fill();
+          ctx.strokeStyle = 'rgba(' + s.c + ',' + (0.35 * a) + ')';
+          ctx.lineWidth = 0.7;
+          ctx.beginPath();
+          ctx.moveTo(s.x - s.r * 5, s.y); ctx.lineTo(s.x + s.r * 5, s.y);
+          ctx.moveTo(s.x, s.y - s.r * 5); ctx.lineTo(s.x, s.y + s.r * 5);
+          ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(' + s.c + ',' + a + ')';
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.283); ctx.fill();
+      }
+      if (shooter) {
+        const p = shooter.age / shooter.life, len = 150;
+        const hx = shooter.x + shooter.dx * shooter.speed * shooter.age;
+        const hy = shooter.y + shooter.dy * shooter.speed * shooter.age;
+        const g = ctx.createLinearGradient(hx, hy, hx - shooter.dx * len, hy - shooter.dy * len);
+        const alpha = Math.sin(Math.PI * p);
+        g.addColorStop(0, 'rgba(255,255,255,' + alpha + ')');
+        g.addColorStop(1, 'rgba(160,200,255,0)');
+        ctx.strokeStyle = g; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx - shooter.dx * len, hy - shooter.dy * len); ctx.stroke();
+      }
+    }
+    function frame(now) {
+      const dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+      if (shooter) { shooter.age += dt; if (shooter.age >= shooter.life) shooter = null; }
+      else { nextShot -= dt; }
+      if (!shooter && nextShot <= 0) {
+        shooter = { x: W * (0.25 + Math.random() * 0.7), y: H * Math.random() * 0.4, dx: -0.82, dy: 0.57, speed: 620, age: 0, life: 0.9 };
+        nextShot = 7 + Math.random() * 8;
+      }
+      draw(now / 1000, dt);
+      requestAnimationFrame(frame);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+    if (!reduceMotion) requestAnimationFrame(frame);
+  })();
+
+  /* ---------- Dial ---------- */
+  (function drawDial() {
+    const cx = 180, cy = 170, r = 105, width = 30, gap = 2.5;
+    const pt = function (deg, rad) {
+      const a = (deg * Math.PI) / 180;
+      return [cx + rad * Math.cos(a), cy - rad * Math.sin(a)];
+    };
+    ZONES.forEach(function (z, i) {
+      const start = 180 - i * 45 - gap, end = 180 - (i + 1) * 45 + gap;
+      const p1 = pt(start, r), p2 = pt(end, r);
+      const path = document.createElementNS(NS, 'path');
+      path.setAttribute('d', 'M' + p1[0] + ' ' + p1[1] + ' A' + r + ' ' + r + ' 0 0 1 ' + p2[0] + ' ' + p2[1]);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', z.colour);
+      path.setAttribute('stroke-width', width);
+      path.setAttribute('class', 'zone');
+      path.dataset.zone = i;
+      document.getElementById('zones').appendChild(path);
+      const mid = pt(180 - i * 45 - 22.5, r + 40);
+      const t = document.createElementNS(NS, 'text');
+      t.setAttribute('class', 'zone-label');
+      t.setAttribute('x', mid[0]);
+      t.setAttribute('y', mid[1]);
+      t.dataset.zone = i;
+      t.textContent = z.name;
+      document.getElementById('zone-labels').appendChild(t);
+    });
+  })();
+
+  /* ---------- Sliders ---------- */
+  document.querySelectorAll('input[type=range]').forEach(function (r) {
+    const out = document.querySelector('output[for="' + r.id + '"]');
+    const levels = r.parentElement.querySelectorAll('.levels span');
+    const update = function () {
+      const share = (r.value - r.min) / (r.max - r.min);
+      const idx = share < 0.34 ? 0 : share < 0.67 ? 1 : 2;
+      r.style.setProperty('--p', share);
+      out.textContent = Number(r.value).toFixed(1) + ' h · ' + ['Low', 'Moderate', 'High'][idx];
+      levels.forEach(function (s, i) { s.classList.toggle('on', i === idx); });
+    };
+    r.addEventListener('input', update);
+    update();
+  });
+
+  /* ---------- Result ---------- */
+  function showResult(score) {
+    const share = Math.max(0, Math.min((score - SCALE_MIN) / (SCALE_MAX - SCALE_MIN), 1));
+    needle.style.transform = 'rotate(' + (-90 + share * 180) + 'deg)';
+    const zi = Math.max(0, Math.min(3, Math.floor(share * 4))), z = ZONES[zi];
+    document.querySelectorAll('.zone, .zone-label').forEach(function (el) {
+      el.classList.toggle('on', Number(el.dataset.zone) === zi);
+    });
+    result.style.setProperty('--glow', z.glow);
+    auraEl.classList.remove('idle');
+    auraEl.textContent = z.aura;
+    subEl.textContent = z.aura + ' energy · ' + z.name;
+    scoreCard.hidden = false;
+    countUp(score);
+  }
+
+  function countUp(target) {
+    if (reduceMotion) { scoreEl.textContent = target.toFixed(1); return; }
+    const start = performance.now(), dur = 1100;
+    function frame(now) {
+      const p = Math.min((now - start) / dur, 1);
+      scoreEl.textContent = (target * (1 - Math.pow(1 - p, 3))).toFixed(1);
+      if (p < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function showError(title, detail) {
+    errorEl.hidden = false;
+    errorEl.innerHTML = '';
+    const strong = document.createElement('strong');
+    strong.textContent = title;
+    errorEl.appendChild(strong);
+    if (detail) {
+      const code = document.createElement('code');
+      code.textContent = detail;
+      errorEl.appendChild(code);
+    }
+    auraEl.classList.add('idle');
+    auraEl.textContent = 'Not read yet';
+    subEl.textContent = 'Something went wrong. Details are below.';
+  }
+
+  function readForm() {
+    const fd = new FormData(form);
+    return {
+      Age: parseInt(fd.get('Age'), 10),
+      Gender: fd.get('Gender'),
+      Country: String(fd.get('Country')).trim(),
+      Academic_Level: fd.get('Academic_Level'),
+      Most_Used_Platform: fd.get('Most_Used_Platform'),
+      Purpose_Of_Use: fd.get('Purpose_Of_Use'),
+      Avg_Daily_Usage_Hours: parseFloat(fd.get('Avg_Daily_Usage_Hours')),
+      Daily_Unlocks: parseInt(fd.get('Daily_Unlocks'), 10),
+      Study_Hours: parseFloat(fd.get('Study_Hours')),
+      Physical_Activity_Hours: parseFloat(fd.get('Physical_Activity_Hours')),
+      Sleep_Hours_Per_Night: parseFloat(fd.get('Sleep_Hours_Per_Night')),
+      Stress_Level: fd.get('Stress_Level')
+    };
+  }
+
+  function setLoading(on) {
+    reveal.disabled = on;
+    document.getElementById('reveal-icon').hidden = on;
+    document.getElementById('reveal-spin').hidden = !on;
+    document.getElementById('reveal-text').textContent = on ? 'Reading your answers' : 'Reveal your aura';
+  }
+
+  async function predict() {
+    errorEl.hidden = true;
+    const payload = readForm();
+    if (!payload.Country || Number.isNaN(payload.Age) || Number.isNaN(payload.Daily_Unlocks)) {
+      showError('Some answers are missing', 'Check age, country and phone unlocks, then try again.');
+      return;
+    }
+
+    setLoading(true);
+    auraEl.classList.add('idle');
+    auraEl.textContent = 'Reading…';
+    subEl.textContent = 'Running the model on your answers.';
+    // The free server sleeps when idle, so the first request can take up to a minute.
+    const wakeTimer = setTimeout(function () {
+      subEl.textContent = 'Waking the free server. This can take up to a minute.';
+    }, 4000);
+    try {
+      const res = await fetch(API_URL + '/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(function () { return null; });
+        let detail = 'The API returned status ' + res.status + '.';
+        if (body && Array.isArray(body.detail) && body.detail.length) {
+          const d = body.detail[0];
+          detail = (d.loc ? d.loc.slice(1).join('.') + ': ' : '') + d.msg;
+        }
+        showError('The API rejected these answers', detail);
+        return;
+      }
+      const data = await res.json();
+      showResult(data.predicted_mental_health_score);
+    } catch (err) {
+      showError('Cannot reach the API', 'Start it in the terminal with: python -m uvicorn main:app --reload');
+    } finally {
+      clearTimeout(wakeTimer);
+      setLoading(false);
+    }
+  }
+
+  reveal.addEventListener('click', predict);
+  form.addEventListener('submit', function (e) { e.preventDefault(); predict(); });
+</script>
+</body>
+</html>
