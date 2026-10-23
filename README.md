@@ -34,3 +34,4 @@ Then open `index.html` in your browser, or visit http://127.0.0.1:8000/docs.
 ## Notes
 
 This is a portfolio project. Predictions are estimates from survey data, not a diagnosis.
+# mental-health-score-predictor
