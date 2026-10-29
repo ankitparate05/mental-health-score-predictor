@@ -47,8 +47,13 @@ class PredictionResponse(BaseModel):
 
 
 @app.get('/')
-def greet():
-    return {'message': 'welcome Ankit'}
+def home():
+    return {
+        'app': 'Mental Health Score Predictor',
+        'status': 'ok',
+        'docs': '/docs',
+        'predict': 'POST /predict',
+    }
 
 
 @app.post('/predict', response_model=PredictionResponse)
