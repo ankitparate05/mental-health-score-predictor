@@ -5,7 +5,12 @@ A machine learning web app that predicts a student's mental health score from th
 
 - **Model:** Random Forest regressor in a scikit-learn pipeline (one-hot encoding + forest), trained on 5,000 student survey responses
 - **API:** FastAPI, one endpoint: `POST /predict`
-- **Frontend:** a single `index.html` page
+- **Frontend:** a single `index.html` page (GitHub Pages)
+
+**Live demo:** https://ankitparate05.github.io/mental-health-score-predictor/
+**API docs:** https://mental-health-api-j6pq.onrender.com/docs
+
+> The API runs on Render's free tier, which sleeps when idle, so the first prediction can take up to a minute. After that it's fast.
 
 ## Example
 
